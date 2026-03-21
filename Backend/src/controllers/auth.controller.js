@@ -60,7 +60,7 @@ export async function register(req, res){
 }
 
 export async function login(req, res) {
-    const { email, password} = req.body;
+    const { email, password } = req.body;
 
     const user = await userModel.findOne({ email })
 
