@@ -4,7 +4,7 @@ import messageModel from '../models/message.model.js';
 
 export async function sendMessage(req, res) {
 
-    const { message, chatId } = req.body;
+    const { message, chat: chatId } = req.body;
 
     let title = null, chat = null;
 
@@ -21,22 +21,20 @@ export async function sendMessage(req, res) {
 
     // save user-message in the chat/messages
     const userMessage = await messageModel.create({
-        chat: chat._id || chatId, 
+        chat: chatId || chat._id, 
         content: message,
         role: "user"
     })
 
     // find all the messages
     const messages = await messageModel.find({ chat: chatId || chat._id })
-   
-    console.log(messages)
 
     // generate response
     const result = await generateResponse(messages);
 
     // add AI response
     const aiMessage = await messageModel.create({
-        chat: chat._id || chatId, 
+        chat: chatId || chat._id,
         content: result,
         role: "ai"
     })

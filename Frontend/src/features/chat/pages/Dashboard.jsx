@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { useSelector } from 'react-redux'
 import { useChatHook } from '../hooks/useChatHook'
 
@@ -21,10 +23,15 @@ const Dashboard = () => {
 
       chat.handleSendMessage({ message: trimmedMessage, chatId: currentChatId })
       setChatInput('')
-  }
+    }
+
+    const openChat = ( chatId ) => {
+      chat.handleOpenChat(chatId, chats)
+    }
 
     useEffect(() => {
         chat.initializeSocketConnection()
+        chat.handleGetChats()
     }, [])
    
     
@@ -42,38 +49,53 @@ const Dashboard = () => {
 
         {open && (
           <>
-            <h1 className="text-xl font-semibold mb-4">Chats</h1>
+            <h1 className="text-xl font-semibold mb-4">Perplexity</h1>
 
-            <div className="space-y-3 overflow-y-auto">
-              <button className="w-full text-left px-4 py-3 rounded-xl bg-zinc-800/70 hover:bg-zinc-700 transition">Chat 1</button>
-              <button className="w-full text-left px-4 py-3 rounded-xl bg-zinc-800/70 hover:bg-zinc-700 transition">Chat 2</button>
-              <button className="w-full text-left px-4 py-3 rounded-xl bg-zinc-800/70 hover:bg-zinc-700 transition">Chat 3</button>
-            </div>
+            <div className='space-y-2'>
+            {Object.values(chats).map((chat,index) => (
+              <button
+                onClick={()=>{openChat(chat.id)}}
+                key={index}
+                type='button'
+                className='w-full cursor-pointer rounded-xl border border-white/60 bg-transparent px-3 py-2 text-left text-base font-medium text-white/90 transition hover:border-white hover:text-white'
+              >
+                {chat.title}
+              </button>
+            ))}
+          </div>
           </>
         )}
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className=" flex-1 flex flex-col">
 
         {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {chats[currentChatId]?.messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-            >
+        <div className="messages flex-1 overflow-y-auto p-6 space-y-6">
+            {chats[currentChatId]?.messages.map((msg) => (
               <div
-                className={`${
-                  msg.role === "user"
-                    ? "max-w-xl bg-blue-600/20 border rounded-br-none border-blue-500/30"
-                    : "max-w-4xl zinc-950"
-                } px-5 py-3 rounded-2xl backdrop-blur-sm`}
+                key={msg.id}
+                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
-                <p className="text-sm leading-relaxed">{msg.content}</p>
-              </div>
-            </div>
-          ))}
+                <div
+                        className={`${
+                          msg.role === "user"
+                            ? "max-w-xl bg-blue-600/20 border rounded-br-none border-blue-500/30"
+                            : "max-w-4xl zinc-950"
+                        } px-5 py-3 rounded-2xl backdrop-blur-sm`}
+                      >
+                        {msg.role === "user" ? (
+                          <p className="text-sm leading-relaxed">{msg.content}</p>
+                        ) : (
+                          <div className="text-sm leading-relaxed prose prose-invert max-w-none">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                              {msg.content}
+                            </ReactMarkdown>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+            ))}
         </div>
 
         {/* Input Box */}
